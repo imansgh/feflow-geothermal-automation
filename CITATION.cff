@@ -1,0 +1,43 @@
+cff-version: 1.2.0
+message: >
+  If you use this software in a publication, please cite it using the
+  information below.
+type: software
+title: >
+  Group 3 Geothermal FEFLOW Automation — Fully Automated Python Pipeline
+  for Coupled TH Geothermal Doublet Modelling in FEFLOW 8.1
+authors:
+  - family-names: Casasso
+    given-names: Alessandro
+    orcid: "https://orcid.org/0000-0000-0000-0000"   # replace with actual ORCID
+abstract: >
+  A fully automated Python pipeline that builds, runs, and post-processes a
+  coupled thermo-hydraulic (TH) FEFLOW 8.1 geothermal doublet model from a
+  single Excel workbook.  The pipeline covers geometry, mesh validation,
+  initial and boundary conditions, multilayer well creation, simulation
+  execution via the FEFLOW IFM Python API, and post-processing with
+  publication-quality figures.  A key contribution is the singleStep()
+  workaround for the FEFLOW 8.1 IFM regression that prevents enumeration
+  of multi-snapshot DAC files via getTimeSteps() / loadTimeStep().
+keywords:
+  - geothermal energy
+  - FEFLOW
+  - thermo-hydraulic modelling
+  - geothermal doublet
+  - Python automation
+  - IFM
+license: MIT
+version: 1.0.0
+date-released: "2026-06-22"
+repository-code: "https://github.com/your-org/your-repo"   # replace with actual URL
+preferred-citation:
+  type: article
+  title: >
+    Automated FEFLOW 8.1 Geothermal Doublet Modelling: Pipeline Design
+    and Thermal Breakthrough Results for the Group 3 Case Study
+  authors:
+    - family-names: Casasso
+      given-names: Alessandro
+  journal: "Geothermics"   # replace with actual journal
+  year: 2026
+  doi: "10.0000/placeholder"   # replace when available

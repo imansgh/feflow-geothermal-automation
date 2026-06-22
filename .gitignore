@@ -1,0 +1,90 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoint
+
+# FEFLOW binary caches and lock files
+*.cache
+*.bak
+*.smhx.cache
+
+# FEFLOW template / skeleton FEM at project root (large binary, generated in GUI)
+Group3_template.fem
+*.fem.bak
+*.fem.cache
+
+# Claude Code local settings (machine-specific, not project code)
+.claude/
+
+# Duplicate workbook at project root (canonical copy is in data/)
+/geoth_tutorial_data_Group3.xlsx
+
+# FEFLOW results (large binaries — not suitable for version control)
+outputs/Group3.dac
+outputs/Group3.npz
+outputs/Group3.fem
+outputs/Group3_geothermal.smhx
+
+# FEFLOW debug/test outputs (created during development, not part of pipeline)
+outputs/test_*.dac
+outputs/test_*.dac.cache
+outputs/test_v
+outputs/test_v.cache
+outputs/*.smhx
+
+# Generated figures (reproducible from pipeline)
+#figures/
+
+# Generated CSV tables
+#outputs/thermal_power_table.csv
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# MyPy / type-checking
+.mypy_cache/
+
+# Logs
+*.log
+
+# PyCharm
+.idea/
+
+# VS Code workspace
+*.code-workspace
+
+# Ruff
+.ruff_cache/
+
+# Pyright
+.pyright/
+
+# Temporary files
+*.tmp
+*.temp

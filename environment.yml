@@ -1,0 +1,15 @@
+name: feflow-geothermal
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python>=3.9
+  - numpy>=1.24
+  - pandas>=2.0
+  - openpyxl>=3.1
+  - matplotlib>=3.7
+  - pytest>=7.4
+  - pip
+  # FEFLOW 8.1 must be installed separately (not available via conda/pip).
+  # After activating this environment, run all scripts from FEFLOW's own
+  # Python interpreter, or add the FEFLOW bin64/python directory to sys.path.
