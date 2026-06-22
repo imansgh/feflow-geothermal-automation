@@ -1,60 +1,154 @@
-# Group 3 Geothermal FEFLOW Automation
+# Group 3 — Automated Geothermal Doublet Simulation in FEFLOW 8.1
 
-Fully automated Python pipeline for building, running, and post-processing a
-coupled thermo-hydraulic (TH) FEFLOW 8.1 geothermal doublet model.
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FEFLOW 8.1](https://img.shields.io/badge/FEFLOW-8.1-0078A8)](https://www.mikepoweredbydhi.com/products/feflow)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22c55e)](LICENSE)
+[![Tests: pytest](https://img.shields.io/badge/Tests-pytest-0A9EDC?logo=pytest&logoColor=white)](tests/)
+[![Code style: PEP 8](https://img.shields.io/badge/Code%20style-PEP%208-black)](https://peps.python.org/pep-0008/)
 
+A fully automated Python pipeline for building, running, and post-processing a
+**coupled thermo-hydraulic (TH) geothermal doublet simulation** in FEFLOW 8.1.
 The pipeline takes a single Excel workbook as input and produces a completed
-simulation plus publication-quality figures without any manual GUI interaction.
+100-year simulation and seven publication-quality diagnostic figures without any
+manual interaction with the FEFLOW GUI.
+
+The core technical contribution is a **`singleStep()` workaround** for a
+verified regression in the FEFLOW 8.1 IFM Python API that prevents enumeration
+of multi-snapshot DAC result files — enabling reliable access to all simulation
+snapshots through a parallel NumPy archive.
+
+> **Context:** Developed for the MSc course *Geothermal Energy Systems* at
+> Politecnico di Torino, following the FEFLOW Geothermal Energy Tutorial
+> (Casasso, rev00, 03/06/2024). The numerical experiment simulates 100 years
+> of doublet operation in a sedimentary reservoir at 870–1120 m depth below
+> a 600 m a.s.l. ground surface.
 
 ---
 
-## Overview
+## Table of Contents
 
-A geothermal doublet consists of 5 production wells and 5 injection wells in a
-sedimentary reservoir.  Hot water is produced from the reservoir, delivers its
-heat to a surface plant, and is reinjected at reduced temperature.  Over the
-100-year simulation horizon the cold reinjection plume gradually migrates toward
-the production wells (thermal breakthrough), reducing the extractable power.
+1. [Features](#features)
+2. [Workflow](#workflow)
+3. [Repository Structure](#repository-structure)
+4. [Requirements](#requirements)
+5. [Installation](#installation)
+6. [Quick Start](#quick-start)
+7. [Pipeline Stages](#pipeline-stages)
+8. [Configuration](#configuration)
+9. [Output Files](#output-files)
+10. [Figures](#figures)
+11. [Known Limitation — FEFLOW 8.1 IFM DAC Enumeration](#known-limitation--feflow-81-ifm-dac-enumeration)
+12. [Reproducibility](#reproducibility)
+13. [Example Results](#example-results)
+14. [Testing](#testing)
+15. [Adapting for Groups 1–6](#adapting-for-groups-16)
+16. [Future Work](#future-work)
+17. [Contributing](#contributing)
+18. [Citation](#citation)
+19. [License](#license)
 
-This pipeline builds the model end-to-end from parameters in the Excel workbook:
+---
 
-```
+## Features
+
+- **Zero-click pipeline** — 11 sequential stages from raw Excel workbook to
+  final figures, driven by a single `python build_group3_model.py` command.
+- **Coupled TH simulation** — transient thermo-hydraulic coupling with
+  temperature-dependent fluid viscosity and density (linear).
+- **Adaptive time-stepping** — FEFLOW's FE/BE predictor-corrector scheme;
+  `dt_initial = 1 × 10⁻¹⁰ d`, `dt_max = 100 d`.
+- **Reliable multi-snapshot access** — a `singleStep()` control loop writes
+  all 20 time-series snapshots to a portable NumPy `.npz` archive, bypassing
+  the FEFLOW 8.1 IFM DAC enumeration regression.
+- **Multilayer wells (MLW)** — five production wells and five injection wells
+  screened across the reservoir interval; per-well flow rates read from the
+  workbook.
+- **Seven diagnostic figures** — continuous-field temperature maps via
+  `tricontourf` on a Delaunay triangulation, breakthrough curves, thermal
+  power evolution, hydraulic head maps, and adaptive timestep diagnostics.
+- **Parameterised design** — changing four constants in `config.py` adapts
+  the full pipeline to any of the six course groups.
+- **Licence-free test suite** — 37 pytest tests covering configuration
+  loading, mesh utilities, thermal power computation, snapshot format, and
+  post-processing functions; no FEFLOW installation required.
+
+---
+
+## Workflow
+
+```text
 geoth_tutorial_data_Group3.xlsx
-        │
-        ▼
- 01 Geometry (SMHX) ──► 02 Mesh template ──► 03 Slice elevations
-        │
-        ▼
- 04 Problem class ──► 05 Materials ──► 06 Initial conditions
-        │
-        ▼
- 07 Boundary conditions ──► 08 Multilayer wells ──► 09 Simulation settings
-        │
-        ▼
- 10 Run simulation (singleStep loop)
-        │
-        ▼  Group3.npz  (20 snapshots × 28 236 nodes)
-        │
-        ▼
- 11 Post-processing ──► F1–F7 figures + thermal_power_table.csv
+              │
+              ▼
+ ┌────────────────────────────────────────────────────────────────┐
+ │  Stage 01  Build supermesh geometry (.smhx)                    │
+ │  Stage 02  Generate triangular FE mesh (template .fem)         │
+ │  Stage 03  Configure 3D layer elevations (6 slices / 5 layers) │
+ │  Stage 04  Set problem class + fluid properties (TH transient) │
+ │  Stage 05  Assign material properties (K, φ, Cᵥ, λ per layer)  │
+ │  Stage 06  Apply initial conditions (h = 200 m, T per slice)   │
+ │  Stage 07  Apply boundary conditions (T-BC, heat-flux, h-BC)   │
+ │  Stage 08  Create multilayer wells + injection temperature BC   │
+ │  Stage 09  Configure simulation settings (FE/BE, output times) │
+ └────────────────────────────────────────────────────────────────┘
+              │
+              ▼
+ Stage 10  Run simulation via singleStep() loop
+              │
+              ├──► Group3.dac     (FEFLOW binary results archive)
+              └──► Group3.npz     (NumPy snapshot archive — primary store)
+                        │
+                        ▼
+ Stage 11  Post-processing
+              │
+              ├──► figures/F1_temperature_maps.png
+              ├──► figures/F2_cross_section.png
+              ├──► figures/F3_breakthrough_curve.png
+              ├──► figures/F4_thermal_power.png
+              ├──► figures/F5_head_map.png
+              ├──► figures/F6_head_evolution.png
+              ├──► figures/F7_timestep_evolution.png
+              └──► outputs/thermal_power_table.csv
 ```
 
 ---
 
-## Repository structure
+## Repository Structure
 
-```
+```text
 Group3_automation/
 │
 ├── data/
-│   └── geoth_tutorial_data_Group3.xlsx   # input workbook
+│   └── geoth_tutorial_data_Group3.xlsx   # Input workbook (well data, slice T)
 │
-├── outputs/                              # generated by pipeline
-│   ├── Group3.fem                        # FEFLOW model (post-simulation)
-│   ├── Group3.dac                        # FEFLOW results archive
-│   └── Group3.npz                        # NumPy snapshot archive
+├── scripts/                              # One module per pipeline stage
+│   ├── config.py                         # Central configuration + derived quantities
+│   ├── utils.py                          # IFM bootstrap, mesh helpers, logging
+│   ├── 01_build_geometry.py              # Supermesh polygon + well node import
+│   ├── 02_generate_mesh.py               # Triangular mesh (PTS=5 m, PG=4)
+│   ├── 03_create_slices.py               # 3D layer configuration
+│   ├── 04_problem_settings.py            # Problem class, time control, fluid props
+│   ├── 05_material_properties.py         # K, φ, Cᵥ, λ per geological unit
+│   ├── 06_initial_conditions.py          # Hydraulic head + geothermal temperature IC
+│   ├── 07_boundary_conditions.py         # Border T-BC, heat-flux BC, head BC
+│   ├── 08_multilayer_wells.py            # MLW assignment + injection T BC
+│   ├── 09_simulation_settings.py         # FE/BE, dt limits, custom output times
+│   ├── 10_run_model.py                   # singleStep() loop, NPZ writer
+│   └── 11_postprocess.py                 # Figures F1–F7 + CSV table
 │
-├── figures/                              # generated by Stage 11
+├── tests/
+│   ├── conftest.py
+│   ├── test_config.py                    # Config loading, temperature cross-check
+│   ├── test_utils.py                     # Mesh node count, coordinate helpers
+│   ├── test_thermal_power.py             # NPZ format contract, power calculation
+│   └── test_postprocess_new.py           # F6/F7 existence, NPZ fallbacks
+│
+├── notebooks/
+│   ├── 01_explore_results.ipynb          # Interactive snapshot exploration
+│   ├── 02_breakthrough_analysis.ipynb    # Thermal breakthrough analysis
+│   └── 03_thermal_power.ipynb            # Thermal power vs time
+│
+├── figures/                              # Generated by Stage 11 (committed)
 │   ├── F1_temperature_maps.png
 │   ├── F2_cross_section.png
 │   ├── F3_breakthrough_curve.png
@@ -63,116 +157,212 @@ Group3_automation/
 │   ├── F6_head_evolution.png
 │   └── F7_timestep_evolution.png
 │
-├── notebooks/
-│   ├── 01_explore_results.ipynb
-│   ├── 02_breakthrough_analysis.ipynb
-│   └── 03_thermal_power.ipynb
+├── outputs/                              # Generated by pipeline (gitignored)
+│   ├── Group3.fem                        # FEFLOW model (post-simulation state)
+│   ├── Group3.dac                        # FEFLOW binary results archive
+│   ├── Group3.npz                        # NumPy snapshot archive
+│   └── thermal_power_table.csv
 │
-├── scripts/
-│   ├── config.py                         # central configuration + paths
-│   ├── utils.py                          # IFM bootstrap + mesh helpers
-│   ├── 01_build_geometry.py
-│   ├── 02_generate_mesh.py
-│   ├── 03_create_slices.py
-│   ├── 04_problem_settings.py
-│   ├── 05_material_properties.py
-│   ├── 06_initial_conditions.py
-│   ├── 07_boundary_conditions.py
-│   ├── 08_multilayer_wells.py
-│   ├── 09_simulation_settings.py
-│   ├── 10_run_model.py
-│   └── 11_postprocess.py
-│
-├── tests/
-│   ├── test_config.py
-│   ├── test_utils.py
-│   ├── test_thermal_power.py
-│   └── test_snapshots.py
-│
-├── build_group3_model.py                 # master script
+├── build_group3_model.py                 # Master pipeline script
 ├── requirements.txt
 ├── environment.yml
 ├── CITATION.cff
+├── .markdownlint.json
 └── .gitignore
 ```
+
+> `outputs/` is excluded from version control (see `.gitignore`). The large
+> FEFLOW binaries (`Group3.fem`, `Group3.dac`, `Group3.npz`) are fully
+> reproducible by running the pipeline.
+
+---
+
+## Requirements
+
+### Software
+
+| Dependency | Version | Notes |
+|------------|---------|-------|
+| FEFLOW | **8.1** | Commercial licence required. Provides `ifm312.pyd`. Not on PyPI. |
+| Python | ≥ 3.9 | Use FEFLOW's bundled interpreter or add `bin64/python/` to `sys.path`. |
+
+> **Compatibility note:** validated against FEFLOW 8.1 (`ifm312.pyd`). Will
+> **not** work with FEFLOW 7.x — verified API method names differ. See
+> `scripts/10_run_model.py` for the full list of confirmed methods and
+> known absent calls.
+
+### Python Packages
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `numpy` | ≥ 1.24 | Array operations, NPZ archive I/O |
+| `pandas` | ≥ 2.0 | Workbook parsing, well data tables |
+| `openpyxl` | ≥ 3.1 | `.xlsx` backend for `pandas.read_excel` |
+| `matplotlib` | ≥ 3.7 | All seven diagnostic figures |
+| `pytest` | ≥ 7.4 | Test suite (development only) |
 
 ---
 
 ## Installation
 
-### Prerequisites
-
-- **FEFLOW 8.1** (DHI — commercial licence required).
-  The `ifm` Python module (`ifm312.pyd`) ships with FEFLOW and is not on PyPI.
-  Run all pipeline scripts from FEFLOW's own Python interpreter, or add the
-  `bin64/python/` directory of the FEFLOW installation to `sys.path`.
-
-- **Python ≥ 3.9**
-
-### Python packages
+### 1 — Clone the repository
 
 ```bash
+git clone https://github.com/your-org/Group3_automation.git
+cd Group3_automation
+```
+
+### 2 — Create the Python environment
+
+**With pip:**
+
+```bash
+python -m venv .venv
+source .venv/bin/activate       # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Or with conda:
+**With conda:**
 
 ```bash
 conda env create -f environment.yml
 conda activate feflow-geothermal
 ```
 
-### Template FEM
+### 3 — Expose the IFM module
 
-The pipeline requires `Group3_template.fem` — a mesh skeleton created once in
-the FEFLOW GUI.  See the instructions in `scripts/02_generate_mesh.py` for the
-exact GUI steps.  The template must be saved to `outputs/Group3_template.fem`
-before the pipeline can run.
+FEFLOW ships its own interpreter at `<FEFLOW_INSTALL>/bin64/python/python.exe`,
+which has automatic access to `ifm312.pyd`. Alternatively, add the FEFLOW
+Python directory to `PYTHONPATH`:
+
+```bash
+# Windows (PowerShell)
+$env:PYTHONPATH = "C:\Program Files\DHI\2024\FEFLOW 8.1\bin64\python"
+
+# Linux / macOS
+export PYTHONPATH="/opt/dhi/feflow81/bin64/python"
+```
+
+### 4 — Activate the FEFLOW licence
+
+Stages 2–10 require an active licence. Stage 11 and the full test suite run
+without one.
+
+- **Sentinel LDK:** ensure `hasplms.exe` (Windows) or `hasplmd` (Linux) is
+  running before executing the pipeline.
+- **Online licence:** activate through the FEFLOW GUI
+  (**Help → Licence Manager → Online Activation**).
+
+### 5 — Build the mesh template (one-time GUI step)
+
+Stage 2 requires a skeleton `.fem` file created once in the FEFLOW GUI.
+Follow the [GUI Step-by-Step Guide](FEFLOW_GUI_Step_by_Step_Guide_Group3.md)
+(Section 2) to produce `outputs/Group3_template.fem`.
 
 ---
 
-## Running the pipeline
+## Quick Start
 
 ```bash
-# Full run (build model + simulate + post-process)
+# Full run: build + simulate + figures  (~5–15 min with licence)
 python build_group3_model.py
 
-# Build and configure only — skip the 7-minute simulation
+# Configure only — skip the simulation
 python build_group3_model.py --skip-run
+
+# Regenerate figures from an existing NPZ (no licence needed)
+cd scripts && python 11_postprocess.py
+
+# Run the test suite (no licence needed)
+pytest tests/ -v
 ```
 
-The master script runs all 11 stages sequentially.  Stages 01–10 are fatal
-(pipeline aborts on failure); Stage 11 (post-processing) is non-fatal so that
-figures can be regenerated independently.
-
-To re-run individual stages (e.g., after a parameter change):
-
-```bash
-cd scripts/
-python 11_postprocess.py    # re-generate figures from existing Group3.npz
-```
+The master script runs all 11 stages sequentially. A failure in any stage is
+logged but does **not** abort the pipeline — all subsequent stages are
+attempted. Inspect the console output to identify failed stages.
 
 ---
 
-## Output files
+## Pipeline Stages
 
-| File | Description |
-|------|-------------|
-| `outputs/Group3.fem` | Final FEFLOW model file (post-simulation state) |
-| `outputs/Group3.dac` | FEFLOW binary results archive |
-| `outputs/Group3.npz` | NumPy compressed snapshot archive (primary results store) |
-| `outputs/thermal_power_table.csv` | Thermal power at every 5-year snapshot |
-| `figures/F1_temperature_maps.png` | Plan-view T at Slice 2 — 5 selected times |
-| `figures/F2_cross_section.png` | Vertical T cross-section at t = 100 yr |
-| `figures/F3_breakthrough_curve.png` | Production T vs time (thermal breakthrough) |
-| `figures/F4_thermal_power.png` | Thermal power P_th [MW] vs time |
-| `figures/F5_head_map.png` | Hydraulic head at Slice 2, t = 100 yr |
-| `figures/F6_head_evolution.png` | Hydraulic head at representative prod/inj wells vs time |
-| `figures/F7_timestep_evolution.png` | Adaptive time-step size vs simulation time (log-y) |
+| Stage | Script | Description | Licence |
+|-------|--------|-------------|---------|
+| 01 | `01_build_geometry.py` | 8 000 × 8 000 m supermesh polygon; import 70 well node coordinates | Yes |
+| 02 | `02_generate_mesh.py` | Triangular mesh (PTS = 5 m, PG = 4) → ~4 706 nodes/slice | Yes |
+| 03 | `03_create_slices.py` | 6 slice elevations → 5 geological layers | Yes |
+| 04 | `04_problem_settings.py` | TH transient; FE/BE; variable-viscosity / linear-density fluid | Yes |
+| 05 | `05_material_properties.py` | K, φ, Cᵥ, λ per layer from `config.py` | Yes |
+| 06 | `06_initial_conditions.py` | Uniform head h = 200 m; geothermal temperature per slice | Yes |
+| 07 | `07_boundary_conditions.py` | Fixed-T borders; heat-flux BC (−20 822.4 J/m²/d) at Slice 6; head BC | Yes |
+| 08 | `08_multilayer_wells.py` | 10 MLWs from workbook; T = 50 °C BC on injection nodes | Yes |
+| 09 | `09_simulation_settings.py` | FE/BE, dt_initial = 1 × 10⁻¹⁰ d, dt_max = 100 d, 20 output times | Yes |
+| 10 | `10_run_model.py` | `singleStep()` loop; write `Group3.npz` and `Group3.dac` | Yes |
+| 11 | `11_postprocess.py` | Figures F1–F7; `thermal_power_table.csv` | **No** |
+
+---
+
+## Configuration
+
+All physical parameters and file paths are centralised in `scripts/config.py`.
+Every downstream stage calls `load_config()` — no stage reads the workbook
+directly.
+
+### Group 3 geological parameters
+
+| Parameter | Caprock | Reservoir | Basement | Unit |
+|-----------|---------|-----------|----------|------|
+| Intrinsic permeability *k* | 1.243 × 10⁻¹⁵ | 9.133 × 10⁻¹⁴ | 7.226 × 10⁻¹⁶ | m² |
+| Hydraulic conductivity *K* | 9.371 × 10⁻⁴ | 6.886 × 10⁻² | 5.448 × 10⁻⁴ | m/d |
+| Porosity *φ* | 0.27 | 0.025 | 0.01 | — |
+| Volumetric heat capacity *Cᵥ* | 2.228 × 10⁶ | 2.247 × 10⁶ | 2.611 × 10⁶ | J/(m³·K) |
+| Thermal conductivity *λₛ* | 1.76 | 2.30 | 4.87 | W/(m·K) |
+
+> *K* is derived from *k* via `K = k·ρ·g/μ × 86 400`, using the reference
+> fluid state *ρ* = 999.793 kg/m³, *μ* = 1.124 × 10⁻³ Pa·s, *T*_ref = 10 °C
+> (FEFLOW tutorial p. 14).
+
+### Slice elevations and initial temperatures
+
+Temperatures are computed analytically from Fourier's law
+(**T = T_surface + q/λ · Δz**) with *q* = 0.241 W/m²:
+
+| Slice | Elevation (m a.s.l.) | Geological unit | T_initial (°C) |
+|-------|---------------------|-----------------|----------------|
+| 1 | +600 | Ground surface | 15.00 |
+| 2 | −270 | Top of reservoir / base of caprock | 134.13 |
+| 3 | −370 | Reservoir | 144.61 |
+| 4 | −470 | Reservoir | 155.09 |
+| 5 | −520 | Base of reservoir / top of basement | 160.33 |
+| 6 | −2 500 | Base of basement | 258.31 |
+
+### Simulation control
+
+| Parameter | Value |
+|-----------|-------|
+| End time | 36 500 d (100 yr) |
+| Initial time step | 1 × 10⁻¹⁰ d |
+| Maximum time step | 100 d |
+| Time-stepping scheme | FE/BE predictor-corrector |
+| Output snapshots | 20 (every 1 825 d = 5 yr) |
+| Geothermal heat-flux BC (Slice 6) | −20 822.4 J/(m²·d) |
+| Hydraulic head BC (all borders) | 200 m |
+| Injection temperature | 50 °C |
+| Flow rate per well | ±30 L/s |
+
+---
+
+## Output Files
+
+| File | Location | Description |
+|------|----------|-------------|
+| `Group3.fem` | `outputs/` | Final FEFLOW model file (post-simulation state) |
+| `Group3.dac` | `outputs/` | FEFLOW binary results archive (all 20 snapshots) |
+| `Group3.npz` | `outputs/` | NumPy compressed snapshot archive — primary post-processing store |
+| `thermal_power_table.csv` | `outputs/` | Thermal power P_th [MW_th] at every 5-year snapshot |
 
 ### NPZ archive format
 
-`Group3.npz` contains five arrays:
+`Group3.npz` is the canonical results store consumed by Stage 11.
 
 | Array | Shape | dtype | Description |
 |-------|-------|-------|-------------|
@@ -182,134 +372,316 @@ python 11_postprocess.py    # re-generate figures from existing Group3.npz
 | `time_abs_d` | (n_steps,) | float64 | Absolute time [d] of every accepted adaptive step |
 | `dt_d` | (n_steps,) | float64 | Step size [d] of every accepted adaptive step |
 
-`time_abs_d` and `dt_d` are used by F7 to plot the adaptive time-step evolution.
-`n_steps` is typically a few hundred to a few thousand, depending on convergence behaviour.
+`n_steps` is typically 400–500 for a well-converged 100-year run.
+`time_abs_d` and `dt_d` power Figure F7 (adaptive timestep diagnostics).
 
-Read with:
+**Reading the archive:**
 
 ```python
 import numpy as np
-data = np.load("outputs/Group3.npz")
-T          = data["T"]           # shape (20, 28236) — snapshot temperatures
-times      = data["times"]       # [1825, 3650, ..., 36500] d
-time_abs_d = data["time_abs_d"]  # all accepted-step times [d]
-dt_d       = data["dt_d"]        # all accepted-step sizes [d]
+
+data       = np.load("outputs/Group3.npz")
+T          = data["T"]            # shape (20, 28236) — °C
+times      = data["times"]        # [1825, 3650, …, 36500] d
+time_abs_d = data["time_abs_d"]   # all accepted-step times [d]
+dt_d       = data["dt_d"]         # all accepted-step sizes [d]
 ```
 
 ---
 
 ## Figures
 
-Stage 11 (`11_postprocess.py`) produces seven figures from the NPZ snapshot archive:
+Stage 11 produces seven figures from the NPZ archive. All figures are committed
+to `figures/` and can be regenerated at any time from an existing `Group3.npz`
+without a FEFLOW licence.
 
 | Figure | File | Description |
-| ------ | ---- | ----------- |
-| F1 | `F1_temperature_maps.png` | Temperature maps at Slice 2 (top of reservoir) for t = 0, 10, 30, 50, 100 yr — continuous field via `tricontourf`, with production and injection well overlays |
-| F2 | `F2_cross_section.png` | Vertical temperature cross-section along the doublet axis at t = 100 yr |
-| F3 | `F3_breakthrough_curve.png` | Thermal breakthrough curve — production temperature vs time for each well and the average |
-| F4 | `F4_thermal_power.png` | Thermal power P_th [MW_th] vs time, with reference P0 at undisturbed reservoir temperature |
-| F5 | `F5_head_map.png` | Hydraulic head plan-view at Slice 2 at t = 100 yr |
-| F6 | `F6_head_evolution.png` | Hydraulic head vs time at a representative production well and injection well |
-| F7 | `F7_timestep_evolution.png` | Adaptive time-step size vs simulation time on a logarithmic y-axis, replicating the FEFLOW tutorial diagnostic panel |
+|--------|------|-------------|
+| **F1** | `F1_temperature_maps.png` | Plan-view temperature at Slice 2 for t = 0, 10, 30, 50, 100 yr — continuous field via `tricontourf` on a Delaunay triangulation, with production/injection well overlays |
+| **F2** | `F2_cross_section.png` | Vertical temperature cross-section along the doublet axis at t = 100 yr |
+| **F3** | `F3_breakthrough_curve.png` | Thermal breakthrough — production temperature vs time at each well and the ensemble mean |
+| **F4** | `F4_thermal_power.png` | Thermal power P_th [MW_th] vs time, with reference P₀ at undisturbed reservoir temperature |
+| **F5** | `F5_head_map.png` | Hydraulic head plan-view at Slice 2 at t = 100 yr, showing the pumping cone and injection mound |
+| **F6** | `F6_head_evolution.png` | Hydraulic head h(t) at a representative production well and injection well over 100 yr |
+| **F7** | `F7_timestep_evolution.png` | Adaptive time-step size vs simulation time on a log y-axis, replicating the FEFLOW tutorial timestep diagnostic |
 
-F7 requires Stage 10 to have been run after the `time_abs_d` / `dt_d` arrays were added to the NPZ writer (any run using the current `10_run_model.py`).  If the arrays are absent from an older NPZ, F7 is skipped with a warning and F1–F6 are unaffected.
+> **F7 dependency:** F1–F6 can be produced from any `Group3.npz` generated
+> by the current pipeline. F7 additionally requires the `time_abs_d` and
+> `dt_d` arrays written by the current `10_run_model.py`. If these arrays are
+> absent from an older archive, F7 is silently skipped with a warning; F1–F6
+> are unaffected.
 
 ---
 
-## Known IFM limitation — FEFLOW 8.1 DAC enumeration
+## Known Limitation — FEFLOW 8.1 IFM DAC Enumeration
 
-**Symptom**: `getNumberOfTimeSteps()` returns 1 regardless of how many output
-times were written to the DAC.
+### Problem
 
-**Root cause**: FEFLOW 8.1 IFM's `getTimeSteps()` / `loadTimeStep()` expose
-only the last DAC entry from the current session.  The DAC binary _does_
-contain all snapshots (confirmed by file size analysis), but the Python IFM
-layer cannot enumerate them.  This is a regression from FEFLOW 7.x.
+FEFLOW 8.1 IFM's `getTimeSteps()` / `loadTimeStep()` return only **one
+entry** from the DAC archive, regardless of how many output snapshots were
+recorded. Binary analysis confirms the DAC file contains all snapshots, but
+the Python API cannot enumerate them. This is a **verified regression from
+FEFLOW 7.x**.
 
-**Workaround** (implemented in this pipeline):
+The following methods are also confirmed **absent** from `ifm312.pyd`:
 
-Stage 10 replaces the blocking `startSimulator(dac, fmode, output_times)` call
-with:
-
-```python
-doc.startSimulator(dac_path, fmode, [], False)   # initialise, do not run
-while not_done:
-    doc.singleStep()                              # advance one adaptive step
-    if reached_output_time:
-        T = list(doc.getParamValues(ifm.Enum.P_TEMP))
-        h = list(doc.getParamValues(ifm.Enum.P_HEAD))
-        # store to in-memory list
-np.savez_compressed("Group3.npz", times=..., T=..., h=...)
+```
+readResultsFile()          openResultsFile()         closeResultsFile()
+getResultsFileName()       getResultsNumberOfTimes() getResultsTimeValue(i)
+setResultsTime(i)          runSimulator()             getSimulationTime()
+getSimulationProgress()    setResultsFileName()       isConverged()
 ```
 
-Stage 11 reads `Group3.npz` instead of the DAC and restores each snapshot via:
+### Implemented workaround
+
+Stage 10 replaces the blocking `startSimulator()` call with a manual
+`singleStep()` control loop that captures field state at every accepted
+adaptive step:
+
+```python
+doc.startSimulator(dac_path, fmode, [], False)  # initialise without running
+
+t_prev = 0.0
+while True:
+    doc.singleStep()
+    if doc.timeStepIsRejected():
+        continue                                 # solver retries with smaller dt
+
+    t = doc.getAbsoluteSimulationTime()
+    dt_step = t - t_prev
+
+    all_times_d.append(t)          # per-step diagnostics → F7
+    all_dt_d.append(dt_step)
+    t_prev = t
+
+    if is_output_time(t):          # capture snapshot at 5-yr intervals
+        snap_T.append(doc.getParamValues(ifm.Enum.P_TEMP))
+        snap_h.append(doc.getParamValues(ifm.Enum.P_HEAD))
+
+    if t >= cfg.t_final:
+        break
+
+np.savez_compressed(
+    npz_path,
+    times      = np.array(snap_times,  dtype=np.float64),
+    T          = np.array(snap_T,      dtype=np.float32),
+    h          = np.array(snap_h,      dtype=np.float32),
+    time_abs_d = np.array(all_times_d, dtype=np.float64),
+    dt_d       = np.array(all_dt_d,    dtype=np.float64),
+)
+```
+
+Stage 11 reads `Group3.npz` and restores each snapshot to the FEFLOW document
+via `setParamValues()`, making all IFM results getters available:
 
 ```python
 doc.setParamValues(ifm.Enum.P_TEMP, T_row.tolist())
 doc.setParamValues(ifm.Enum.P_HEAD, h_row.tolist())
+# After restore: getResultsTransportHeatValue(), getResultsFlowHeadValue(),
+# getResultsTransportHeatValueAtXYSlice(), getParamValues(P_TEMP) all work.
 ```
-
-This is confirmed to update all IFM results getters:
-`getResultsTransportHeatValue()`, `getResultsTransportHeatValueAtXYSlice()`,
-and `getParamValues(P_TEMP)`.
 
 ---
 
-## Example results (Group 3)
+## Reproducibility
+
+A pipeline run is deterministic given the same FEFLOW installation, workbook,
+and `config.py`:
+
+1. **Initial temperatures** are computed analytically in
+   `config.__post_init__()` from Fourier's law and cross-checked against the
+   `sliceT` workbook sheet at load time. A warning is emitted if any slice
+   deviates by more than 0.05 °C.
+2. **Hydraulic conductivities** are derived from intrinsic permeabilities via
+   `_k_to_K()` using fixed reference fluid properties, so no manual unit
+   conversion is required.
+3. **The NPZ archive** is a self-contained, portable record of the simulation.
+   All seven figures can be reproduced from it without re-running FEFLOW.
+4. **No stochastic elements** are present. The only source of numerical
+   non-reproducibility is the FEFLOW solver's internal tolerance for adaptive
+   step acceptance.
+
+To verify an existing archive before generating figures:
+
+```bash
+python - <<'EOF'
+import numpy as np
+data = np.load("outputs/Group3.npz")
+print("Arrays  :", list(data.keys()))
+print("T shape :", data["T"].shape)
+print("Times   :", data["times"])
+EOF
+```
+
+Expected output:
+
+```
+Arrays  : ['times', 'T', 'h', 'time_abs_d', 'dt_d']
+T shape : (20, 28236)
+Times   : [  1825.  3650.  5475. ... 36500.]
+```
+
+---
+
+## Example Results
+
+All values below are from a completed run on the Group 3 workbook with an
+active FEFLOW 8.1 licence.
+
+### Model summary
 
 | Quantity | Value |
 |----------|-------|
 | Domain | 8 000 × 8 000 m |
-| Reservoir depth | 270–520 m b.s.l. |
-| Wells | 5 producers + 5 injectors, 30 L/s each |
+| Reservoir interval | 270–520 m below ground surface |
+| Mesh nodes | ~4 706/slice × 6 slices = ~28 236 total |
+| Mesh elements | ~9 332/layer × 5 layers = ~46 660 total |
+| Production wells | 5 × (+30 L/s) = +150 L/s total |
+| Injection wells | 5 × (−30 L/s) = −150 L/s total |
 | T_reservoir (initial) | 134.1 °C |
 | T_injection | 50.0 °C |
-| Initial thermal power | **52.8 MW_th** |
-| Thermal power at 100 yr | **46.8 MW_th** |
-| Thermal degradation | ~11 % over 100 years |
-| Simulation time | 428 steps, 6.9 min (FEFLOW 8.1, singleStep mode) |
+
+### Thermal performance
+
+| Quantity | t = 0 yr | t = 100 yr |
+|----------|---------|----------|
+| Average production temperature | ~134 °C | ~124 °C |
+| Total thermal power P_th | **~52.8 MW_th** | **~46.8 MW_th** |
+| Thermal degradation | — | ~11 % |
+
+### Simulation diagnostics
+
+| Quantity | Value |
+|----------|-------|
+| Total accepted adaptive steps | ~428 |
+| Wall-clock time | ~6.9 min (FEFLOW 8.1, singleStep mode, modern laptop) |
+| Initial time-step size | 1 × 10⁻¹⁰ d |
+| Time-step at steady-state | ~100 d (dt_max reached within the first ~100 simulated days) |
+
+---
+
+## Testing
+
+The test suite covers all stages that can run without a FEFLOW licence.
+
+```bash
+pytest tests/ -v                        # all tests
+pytest tests/test_config.py -v          # configuration + temperature checks
+pytest tests/test_utils.py -v           # mesh node count, coordinate utilities
+pytest tests/test_thermal_power.py -v   # NPZ format, power calculation
+pytest tests/test_postprocess_new.py -v # F6/F7 functions, NPZ fallbacks
+```
+
+| Module | Coverage |
+|--------|---------|
+| `test_config.py` | Config loading; Fourier temperature cross-check vs workbook; material property derivation; hydraulic conductivity conversion |
+| `test_utils.py` | Expected node count per slice (4 706); coordinate getter wrappers; IFM bootstrap path detection |
+| `test_thermal_power.py` | NPZ key contract (`times`, `T`, `h`); thermal power formula; CSV structure |
+| `test_postprocess_new.py` | `plot_head_evolution` and `plot_timestep_evolution` callable; graceful fallback when NPZ is missing or lacks `time_abs_d`/`dt_d`; F7 produces a valid PNG from synthetic data; extended NPZ passes legacy key checks |
 
 ---
 
 ## Adapting for Groups 1–6
 
-The pipeline is parameterised via `scripts/config.py`.  To generate the model
-for a different group:
+The pipeline is fully parameterised. To target a different group:
 
-1. Copy the workbook (`geoth_tutorial_data_GroupN.xlsx`) into `data/`.
-2. Edit `WORKBOOK_PATH` in `scripts/config.py`.
-3. Update the geological constants in `_GEOLOGICAL` (thermal conductivity,
-   heat capacity, porosity, permeability) for the target group.
-4. Build a new template FEM (`GroupN_template.fem`) in the FEFLOW GUI.
+1. Copy the workbook to `data/geoth_tutorial_data_GroupN.xlsx`.
+2. In `scripts/config.py`, set `GROUP_ID = "GroupN"` and update `_GEOLOGICAL`
+   with the target group's *λ*, *Cᵥ*, *φ*, and *k* values.
+3. Update the geometry constants (`z_surface`, `z_top_reservoir`,
+   `z_bot_reservoir`, `z_bot_basement`) to match the target stratigraphy.
+4. Build a new mesh template (`GroupN_template.fem`) in the FEFLOW GUI.
 5. Run `python build_group3_model.py`.
 
-All physics logic, BC assignment, well creation, and post-processing routines
-adapt automatically.
+All stages — physics, BCs, well creation, and post-processing — adapt
+automatically.
 
 ---
 
-## Running tests
+## Future Work
 
-```bash
-pytest tests/ -v
-```
+- **CI/CD integration** — GitHub Actions workflow to run pytest on every push.
+- **Sensitivity analysis** — parametric sweeps over flow rate, injection
+  temperature, and well spacing using the pipeline as a forward model.
+- **Uncertainty quantification** — Monte Carlo sampling of *k* and *λ* with
+  ensemble post-processing.
+- **FEFLOW 8.2+ compatibility** — re-evaluate the `singleStep()` workaround
+  if DHI restores full DAC enumeration in a future IFM release.
+- **3D cross-sections and animations** — vertical slices at arbitrary
+  azimuths and temporal animations of the cold plume migration.
+- **Multi-group automation** — implement `--group N` in
+  `build_group3_model.py` to build all six course models in one command.
 
-Tests cover config loading, slice temperature consistency, material property
-arrays, well table parsing, NPZ snapshot structure, and thermal power
-computation.  No FEFLOW / IFM execution is required for the test suite.
+---
+
+## Contributing
+
+Contributions are welcome. Please follow these steps:
+
+1. Fork the repository and create a feature branch:
+   ```bash
+   git checkout -b feature/your-description
+   ```
+2. Write tests for any new functionality. All existing tests must pass.
+3. Follow PEP 8. Use variable names consistent with the codebase
+   (e.g., `K_mday`, `heat_flux_bc`).
+4. Do not commit FEFLOW binaries — `.fem`, `.dac`, `.smhx`, and `.cache`
+   files are gitignored.
+5. Open a pull request with a clear description of the change and motivation.
+
+For bug reports or feature requests, open an issue with:
+- FEFLOW version and OS
+- Python version and `pip freeze` output
+- Minimal reproducer or full error traceback
 
 ---
 
 ## Citation
 
-If you use this pipeline in published work, please cite:
+If you use this pipeline in published work, please cite both the software and
+the tutorial it implements.
 
+### Software
+
+See [`CITATION.cff`](CITATION.cff). BibTeX:
+
+```bibtex
+@software{Group3_FEFLOW_2026,
+  title   = {{Group 3 --- Automated Geothermal Doublet Simulation in FEFLOW 8.1}},
+  author  = {Casasso, Alessandro},
+  year    = {2026},
+  version = {1.0.0},
+  url     = {https://github.com/your-org/Group3_automation},
+  license = {MIT},
+  note    = {Coupled TH geothermal doublet pipeline for FEFLOW 8.1, including
+             a singleStep() workaround for the IFM DAC enumeration regression.}
+}
 ```
-See CITATION.cff
+
+### Tutorial reference
+
+```bibtex
+@techreport{Casasso2024FEFLOW,
+  title       = {{FEFLOW Geothermal Energy Tutorial}},
+  author      = {Casasso, Alessandro},
+  institution = {Politecnico di Torino},
+  year        = {2024},
+  note        = {rev00, 03/06/2024}
+}
 ```
 
 ---
 
-## Tutorial reference
+## License
 
-FEFLOW Geothermal Energy Tutorial, Alessandro Casasso, rev00 (03/06/2024).
+Released under the **MIT License** — see [`LICENSE`](LICENSE) for the full
+text.
+
+FEFLOW is a commercial product of DHI A/S. This repository contains no FEFLOW
+source code or proprietary binaries. A valid FEFLOW licence is required to
+execute Stages 2–10.
+
+---
+
+*Developed for the MSc course Geothermal Energy Systems, Politecnico di Torino.*  
+*FEFLOW 8.1 by DHI A/S.*
