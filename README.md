@@ -1,4 +1,4 @@
-# Group 3 — Automated Geothermal Doublet Simulation in FEFLOW 8.1
+# Group 3 — Automated Geothermal Doublet Simulation in FEFLOW 8.1 - BIP_2026
 
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FEFLOW 8.1](https://img.shields.io/badge/FEFLOW-8.1-0078A8)](https://www.mikepoweredbydhi.com/products/feflow)
