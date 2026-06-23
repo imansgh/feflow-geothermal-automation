@@ -679,7 +679,7 @@ See [`CITATION.cff`](CITATION.cff). BibTeX:
 ```bibtex
 @software{Group3_FEFLOW_2026,
   title   = {{Group 3 --- Automated Geothermal Doublet Simulation in FEFLOW 8.1}},
-  author  = {Saghafi far, Iman},
+  author  = {Saghafifar, Iman},
   year    = {2026},
   version = {1.0.0},
   url     = {https://github.com/imansgh/feflow-geothermal-automation},
