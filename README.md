@@ -339,7 +339,11 @@ directly.
 
 > *K* is derived from *k* via `K = k·ρ·g/μ × 86 400`, using the reference
 > fluid state *ρ* = 999.793 kg/m³, *μ* = 1.124 × 10⁻³ Pa·s, *T*_ref = 10 °C
-> (FEFLOW tutorial p. 14).
+> (FEFLOW tutorial p. 14). The workbook's `conductivities` sheet evaluates this
+> same formula with its stored reference constants; the resulting *K* values
+> agree with those above to within ~0.4 %. The difference is immaterial, since
+> FEFLOW recomputes *K* internally from the intrinsic permeability *k*, which is
+> the actual model input.
 
 ### Slice elevations and initial temperatures
 
@@ -354,6 +358,13 @@ Temperatures are computed analytically from Fourier's law
 | 4 | −470 | Reservoir | 155.09 |
 | 5 | −520 | Base of reservoir / top of basement | 160.33 |
 | 6 | −2 500 | Base of basement | 258.31 |
+
+> **Elevation vs. depth:** elevations are given in metres above sea level
+> (m a.s.l.) relative to the +600 m ground surface. Depth below ground surface
+> = 600 − elevation. Thus Slice 2 (−270) sits at 870 m depth, Slice 3 (−370)
+> at 970 m, Slice 4 (−470) at 1070 m, and Slice 5 (−520) at 1120 m — the
+> 870–1120 m reservoir interval. Intermediate slice temperatures are computed
+> at these depths from the Group 3 geothermal gradients.
 
 ### Simulation control
 
@@ -668,10 +679,10 @@ See [`CITATION.cff`](CITATION.cff). BibTeX:
 ```bibtex
 @software{Group3_FEFLOW_2026,
   title   = {{Group 3 --- Automated Geothermal Doublet Simulation in FEFLOW 8.1}},
-  author  = {Casasso, Alessandro},
+  author  = {Saghafi far, Iman},
   year    = {2026},
   version = {1.0.0},
-  url     = {https://github.com/your-org/Group3_automation},
+  url     = {https://github.com/imansgh/feflow-geothermal-automation},
   license = {MIT},
   note    = {Coupled TH geothermal doublet pipeline for FEFLOW 8.1, including
              a singleStep() workaround for the IFM DAC enumeration regression.}
