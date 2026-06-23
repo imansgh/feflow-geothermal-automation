@@ -136,7 +136,7 @@ flowchart LR
 ## Repository Structure
 
 ```text
-Group3_automation/
+feflow-geothermal-automation/
 │
 ├── data/
 │   └── geoth_tutorial_data_Group3.xlsx   # Input workbook (well data, slice T)
@@ -228,8 +228,8 @@ Group3_automation/
 ### 1 — Clone the repository
 
 ```bash
-git clone https://github.com/your-org/Group3_automation.git
-cd Group3_automation
+git clone https://github.com/imansgh/feflow-geothermal-automation.git
+cd feflow-geothermal-automation
 ```
 
 ### 2 — Create the Python environment
