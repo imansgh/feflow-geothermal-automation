@@ -76,40 +76,30 @@ snapshots through a parallel NumPy archive.
 
 ## Workflow
 
-```text
-geoth_tutorial_data_Group3.xlsx
-              │
-              ▼
- ┌────────────────────────────────────────────────────────────────┐
- │  Stage 01  Build supermesh geometry (.smhx)                    │
- │  Stage 02  Generate triangular FE mesh (template .fem)         │
- │  Stage 03  Configure 3D layer elevations (6 slices / 5 layers) │
- │  Stage 04  Set problem class + fluid properties (TH transient) │
- │  Stage 05  Assign material properties (K, φ, Cᵥ, λ per layer)  │
- │  Stage 06  Apply initial conditions (h = 200 m, T per slice)   │
- │  Stage 07  Apply boundary conditions (T-BC, heat-flux, h-BC)   │
- │  Stage 08  Create multilayer wells + injection temperature BC  │
- │  Stage 09  Configure simulation settings (FE/BE, output times) │
- └────────────────────────────────────────────────────────────────┘
-              │
-              ▼
- Stage 10  Run simulation via singleStep() loop
-              │
-              ├──► Group3.dac     (FEFLOW binary results archive)
-              └──► Group3.npz     (NumPy snapshot archive — primary store)
-                        │
-                        ▼
- Stage 11  Post-processing
-              │
-              ├──► figures/F1_temperature_maps.png
-              ├──► figures/F2_cross_section.png
-              ├──► figures/F3_breakthrough_curve.png
-              ├──► figures/F4_thermal_power.png
-              ├──► figures/F5_head_map.png
-              ├──► figures/F6_head_evolution.png
-              ├──► figures/F7_timestep_evolution.png
-              └──► outputs/thermal_power_table.csv
+## Workflow
+
+```mermaid
+flowchart TD
+    IN["geoth_tutorial_data_Group3.xlsx"]
+    S01["Stage 01 · Build supermesh geometry (.smhx)"]
+    S02["Stage 02 · Generate triangular FE mesh (template .fem)"]
+    S03["Stage 03 · Configure 3D layer elevations"]
+    S04["Stage 04 · Set problem class + fluid properties"]
+    S05["Stage 05 · Assign material properties"]
+    S06["Stage 06 · Apply initial conditions"]
+    S07["Stage 07 · Apply boundary conditions"]
+    S08["Stage 08 · Create multilayer wells"]
+    S09["Stage 09 · Configure simulation settings"]
+    S10["Stage 10 · Run simulation via singleStep() loop"]
+
+    DAC["Group3.dac"]
+    NPZ["Group3.npz"]
+
+    IN --> S01 --> S02 --> S03 --> S04 --> S05 --> S06 --> S07 --> S08 --> S09 --> S10
+    S10 --> DAC
+    S10 --> NPZ
 ```
+
 
 ---
 
