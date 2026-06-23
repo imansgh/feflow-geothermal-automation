@@ -82,7 +82,7 @@ snapshots through a parallel NumPy archive.
 geoth_tutorial_data_Group3.xlsx
               │
               ▼
- ┌────────────────────────────────────────────────────────────────┐
+ ┌─────────────────────────────────────────────────────────────────┐
  │  Stage 01  Build supermesh geometry (.smhx)                     │
  │  Stage 02  Generate triangular FE mesh (template .fem)          │
  │  Stage 03  Configure 3D layer elevations (6 slices / 5 layers)  │
@@ -92,7 +92,7 @@ geoth_tutorial_data_Group3.xlsx
  │  Stage 07  Apply boundary conditions (T-BC, heat-flux, h-BC)    │
  │  Stage 08  Create multilayer wells + injection temperature BC   │
  │  Stage 09  Configure simulation settings (FE/BE, output times)  │
- └────────────────────────────────────────────────────────────────┘
+ └─────────────────────────────────────────────────────────────────┘
               │
               ▼
  Stage 10  Run simulation via singleStep() loop
