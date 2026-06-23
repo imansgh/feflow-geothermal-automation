@@ -651,37 +651,7 @@ For bug reports or feature requests, open an issue with:
 
 ## Citation
 
-If you use this pipeline in published work, please cite both the software and
-the tutorial it implements.
-
-### Software
-
-See [`CITATION.cff`](CITATION.cff). BibTeX:
-
-```bibtex
-@software{Group3_FEFLOW_2026,
-  title   = {{Group 3 --- Automated Geothermal Doublet Simulation in FEFLOW 8.1}},
-  author  = {{Saghafi Far}, Iman},
-  year    = {2026},
-  version = {1.0.0},
-  url     = {https://github.com/imansgh/feflow-geothermal-automation},
-  license = {MIT},
-  note    = {Coupled TH geothermal doublet pipeline for FEFLOW 8.1, including
-             a singleStep() workaround for the IFM DAC enumeration regression.}
-}
-```
-
-### Tutorial reference
-
-```bibtex
-@techreport{Casasso2024FEFLOW,
-  title       = {{FEFLOW Geothermal Energy Tutorial}},
-  author      = {Casasso, Alessandro},
-  institution = {Politecnico di Torino},
-  year        = {2024},
-  note        = {rev00, 03/06/2024}
-}
-```
+See [`CITATION.cff`](CITATION.cff).
 
 ---
 
