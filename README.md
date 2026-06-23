@@ -17,9 +17,10 @@ verified regression in the FEFLOW 8.1 IFM Python API that prevents enumeration
 of multi-snapshot DAC result files — enabling reliable access to all simulation
 snapshots through a parallel NumPy archive.
 
-> **Context:** Developed for the MSc course *Geothermal Energy Systems* at
-> Politecnico di Torino, following the FEFLOW Geothermal Energy Tutorial
-> (Casasso, rev00, 03/06/2024). The numerical experiment simulates 100 years
+> **Context:** Developed for the Erasmus+ Blended Intensive Programme (BIP)
+> *"Geothermal Energy: Resource Assessment, Plants, and Environmental Impacts"*
+> (2nd edition, 2026), Politecnico di Torino, following the FEFLOW Geothermal
+> Energy Tutorial (Casasso, rev00, 03/06/2024). The numerical experiment simulates 100 years
 > of doublet operation in a sedimentary reservoir at 870–1120 m depth below
 > a 600 m a.s.l. ground surface.
 
@@ -45,7 +46,8 @@ snapshots through a parallel NumPy archive.
 16. [Future Work](#future-work)
 17. [Contributing](#contributing)
 18. [Citation](#citation)
-19. [License](#license)
+19. [Acknowledgements / Team](#acknowledgements--team)
+20. [License](#license)
 
 ---
 
@@ -679,7 +681,7 @@ See [`CITATION.cff`](CITATION.cff). BibTeX:
 ```bibtex
 @software{Group3_FEFLOW_2026,
   title   = {{Group 3 --- Automated Geothermal Doublet Simulation in FEFLOW 8.1}},
-  author  = {Saghafifar, Iman},
+  author  = {{Saghafi Far}, Iman},
   year    = {2026},
   version = {1.0.0},
   url     = {https://github.com/imansgh/feflow-geothermal-automation},
@@ -703,6 +705,32 @@ See [`CITATION.cff`](CITATION.cff). BibTeX:
 
 ---
 
+## Acknowledgements / Team
+
+This work was carried out as the Group 3 feasibility study and well-field
+simulation for the Erasmus+ BIP *"Geothermal Energy: Resource Assessment,
+Plants, and Environmental Impacts"* (2nd edition, 2026), Politecnico di Torino.
+
+**Group 3 members:**
+
+| Name | Institution |
+|------|-------------|
+| Iman Saghafi Far | Politecnico di Torino, Italy |
+| Alessandro De Muro | Politecnico di Torino, Italy |
+| Ana Carolina Marques Moreira | University of Lisbon, Portugal |
+| Anton Afanasiev | University of Patras, Greece |
+| Myrsini Ntente | KTH Royal Institute of Technology, Sweden |
+| Sofia Isabel Casquerio Rodrigues | University of Lisbon, Portugal |
+
+The automation pipeline and this documentation were developed by Iman Saghafi
+Far. The geological dataset, conceptual model, and feasibility analysis were a
+collaborative effort of the full Group 3 team.
+
+With thanks to **Alessandro Casasso** (Politecnico di Torino) for the FEFLOW
+Geothermal Energy Tutorial on which this work is based.
+
+---
+
 ## License
 
 Released under the **MIT License** — see [`LICENSE`](LICENSE) for the full
@@ -714,5 +742,5 @@ execute Stages 2–10.
 
 ---
 
-*Developed for the MSc course Geothermal Energy Systems, Politecnico di Torino.*  
+*Developed for the Erasmus+ BIP "Geothermal Energy: Resource Assessment, Plants, and Environmental Impacts" (2nd ed., 2026), Politecnico di Torino.*  
 *FEFLOW 8.1 by DHI A/S.*
