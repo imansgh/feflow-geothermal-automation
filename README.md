@@ -88,7 +88,7 @@ geoth_tutorial_data_Group3.xlsx
  │  Stage 05  Assign material properties (K, φ, Cᵥ, λ per layer)  │
  │  Stage 06  Apply initial conditions (h = 200 m, T per slice)   │
  │  Stage 07  Apply boundary conditions (T-BC, heat-flux, h-BC)   │
- │  Stage 08  Create multilayer wells + injection temperature BC   │
+ │  Stage 08  Create multilayer wells + injection temperature BC  │
  │  Stage 09  Configure simulation settings (FE/BE, output times) │
  └────────────────────────────────────────────────────────────────┘
               │
