@@ -78,59 +78,39 @@ snapshots through a parallel NumPy archive.
 
 ## Workflow
 
-### Part 1 — Build, configure & run (Stages 01–10)
-
-```mermaid
-flowchart TD
-    IN["geoth_tutorial_data_Group3.xlsx"]
-    S01["Stage 01 · Build supermesh geometry (.smhx)"]
-    S02["Stage 02 · Generate triangular FE mesh (template .fem)"]
-    S03["Stage 03 · Configure 3D layer elevations (6 slices / 5 layers)"]
-    S04["Stage 04 · Set problem class + fluid properties (TH transient)"]
-    S05["Stage 05 · Assign material properties (K, φ, Cᵥ, λ per layer)"]
-    S06["Stage 06 · Apply initial conditions (h = 200 m, T per slice)"]
-    S07["Stage 07 · Apply boundary conditions (T-BC, heat-flux, h-BC)"]
-    S08["Stage 08 · Create multilayer wells + injection temperature BC"]
-    S09["Stage 09 · Configure simulation settings (FE/BE, output times)"]
-    S10["Stage 10 · Run simulation via singleStep() loop"]
-    DAC["Group3.dac<br/>(FEFLOW binary results archive)"]
-    NPZ["Group3.npz<br/>(NumPy snapshot archive — primary store)"]
-    IN --> S01 --> S02 --> S03 --> S04 --> S05 --> S06 --> S07 --> S08 --> S09 --> S10
-    S10 --> DAC
-    S10 --> NPZ
-    classDef store fill:#E6F1FB,stroke:#185FA5,color:#042C53;
-    classDef run fill:#FAEEDA,stroke:#854F0B,color:#412402;
-    class IN,DAC,NPZ store;
-    class S10 run;
-```
-
-### Part 2 — Post-processing (Stage 11)
-
-```mermaid
-flowchart LR
-    NPZ["Group3.npz<br/>(NumPy snapshot archive)"]
-    P11["Stage 11 · Post-processing"]
-    F1["figures/F1_temperature_maps.png"]
-    F2["figures/F2_cross_section.png"]
-    F3["figures/F3_breakthrough_curve.png"]
-    F4["figures/F4_thermal_power.png"]
-    F5["figures/F5_head_map.png"]
-    F6["figures/F6_head_evolution.png"]
-    F7["figures/F7_timestep_evolution.png"]
-    CSV["outputs/thermal_power_table.csv"]
-    NPZ --> P11
-    P11 --> F1
-    P11 --> F2
-    P11 --> F3
-    P11 --> F4
-    P11 --> F5
-    P11 --> F6
-    P11 --> F7
-    P11 --> CSV
-    classDef store fill:#E6F1FB,stroke:#185FA5,color:#042C53;
-    classDef run fill:#FAEEDA,stroke:#854F0B,color:#412402;
-    class NPZ,CSV store;
-    class P11 run;
+```text
+geoth_tutorial_data_Group3.xlsx
+              │
+              ▼
+ ┌────────────────────────────────────────────────────────────────┐
+ │  Stage 01  Build supermesh geometry (.smhx)                     │
+ │  Stage 02  Generate triangular FE mesh (template .fem)          │
+ │  Stage 03  Configure 3D layer elevations (6 slices / 5 layers)  │
+ │  Stage 04  Set problem class + fluid properties (TH transient)  │
+ │  Stage 05  Assign material properties (K, phi, Cv, lambda)      │
+ │  Stage 06  Apply initial conditions (h = 200 m, T per slice)    │
+ │  Stage 07  Apply boundary conditions (T-BC, heat-flux, h-BC)    │
+ │  Stage 08  Create multilayer wells + injection temperature BC   │
+ │  Stage 09  Configure simulation settings (FE/BE, output times)  │
+ └────────────────────────────────────────────────────────────────┘
+              │
+              ▼
+ Stage 10  Run simulation via singleStep() loop
+              │
+              ├──► Group3.dac     (FEFLOW binary results archive)
+              └──► Group3.npz     (NumPy snapshot archive — primary store)
+                        │
+                        ▼
+ Stage 11  Post-processing
+              │
+              ├──► figures/F1_temperature_maps.png
+              ├──► figures/F2_cross_section.png
+              ├──► figures/F3_breakthrough_curve.png
+              ├──► figures/F4_thermal_power.png
+              ├──► figures/F5_head_map.png
+              ├──► figures/F6_head_evolution.png
+              ├──► figures/F7_timestep_evolution.png
+              └──► outputs/thermal_power_table.csv
 ```
 
 ---
