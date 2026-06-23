@@ -76,8 +76,6 @@ snapshots through a parallel NumPy archive.
 
 ## Workflow
 
-## Workflow
-
 ```mermaid
 flowchart TD
     IN["geoth_tutorial_data_Group3.xlsx"]
