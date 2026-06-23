@@ -105,7 +105,7 @@ flowchart TD
 ### Part 2 — Post-processing (Stage 11)
 
 ```mermaid
-flowchart TD
+flowchart LR
     NPZ["Group3.npz<br/>(NumPy snapshot archive)"]
     P11["Stage 11 · Post-processing"]
     F1["figures/F1_temperature_maps.png"]
