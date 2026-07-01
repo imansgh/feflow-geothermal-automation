@@ -8,6 +8,30 @@ style of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `figures/F9_spider_diagram.png` — exported from the `Sensitivity` sheet's
+  native chart in `economics/Economic_Assessment_Group3.xlsx`; added a new
+  "Sensitivity Analysis" subsection to `README.md` § Results.
+- `assets/workFlow_diagram2.png` — nine-step workflow diagram, replacing the
+  plain-text workflow diagram in `README.md` § Overview.
+- `assets/RepositoryStructure.png` — repository architecture diagram, added
+  to `README.md` § Repository Structure.
+- `docs/REPOSITORY_STRUCTURE.md` — full directory tree with per-file
+  descriptions, moved out of `README.md` into a dedicated file; `README.md`
+  § Repository Structure now shows only the architecture diagram and a
+  pointer to this document.
+
+### Fixed
+
+- `README.md` § Repository Structure was missing `CONTRIBUTING.md`,
+  `CHANGELOG.md`, `LICENSE`, and `docs/` from the directory tree (all added
+  in earlier work but never reflected there); corrected before it was
+  moved to `docs/REPOSITORY_STRUCTURE.md`.
+- `README.md` § Economic Assessment previously stated the spider diagram
+  "has not been exported as a standalone repository image," which is no
+  longer accurate now that Figure F9 exists.
+
 ## [1.0.0] - 2026-07-01
 
 ### Added
