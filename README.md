@@ -126,10 +126,22 @@ of any of its component models — see [Limitations](#limitations) and
 
 ## Repository Structure
 
+<p align="center">
+  <img src="assets/RepositoryStructure.png" width="900" alt="Repository architecture and reproducible computational workflow, showing how scripts/, outputs/, figures/, and the economics workbooks connect">
+</p>
+
+<p align="center">
+  <em>Repository architecture and reproducible computational workflow: scripts/
+  drive the FEFLOW simulation, whose outputs feed figures/ and the
+  economics/ workbooks (ORC → CAPEX/LCOE/Sensitivity) through to the final
+  results.</em>
+</p>
+
 ```text
 feflow-geothermal-automation/
 │
 ├── assets/
+│   ├── RepositoryStructure.png             # Repository architecture diagram (this README)
 │   └── Workflow.png                        # Hero workflow diagram (this README)
 │
 ├── data/
