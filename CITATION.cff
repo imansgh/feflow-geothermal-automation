@@ -1,24 +1,31 @@
 cff-version: 1.2.0
 message: >
   If you use this software in a publication, please cite it using the
-  information below.
+  information below, in addition to the original educational material it
+  builds on (see the "Citation" section of README.md).
 type: software
 title: >
-  Group 3 Geothermal FEFLOW Automation — Fully Automated Python Pipeline
-  for Coupled TH Geothermal Doublet Modelling in FEFLOW 8.1
+  Group 3 Geothermal FEFLOW Automation — Coupled FEFLOW / ORC / Economic
+  Assessment Workflow for a Geothermal Doublet
 authors:
-  - family-names: saghafifar
+  - family-names: "Saghafi Far"
     given-names: Iman
     orcid: "https://orcid.org/0009-0007-5052-8427"
 abstract: >
-  A fully automated Python pipeline that builds, runs, and post-processes a
-  coupled thermo-hydraulic (TH) FEFLOW 8.1 geothermal doublet model from a
-  single Excel workbook.  The pipeline covers geometry, mesh validation,
-  initial and boundary conditions, multilayer well creation, simulation
-  execution via the FEFLOW IFM Python API, and post-processing with
-  publication-quality figures.  A key contribution is the singleStep()
-  workaround for the FEFLOW 8.1 IFM regression that prevents enumeration
-  of multi-snapshot DAC files via getTimeSteps() / loadTimeStep().
+  A reproducible, coupled workflow for a geothermal doublet feasibility
+  study. A fully automated Python pipeline builds, runs, and post-processes
+  a thermo-hydraulic (TH) FEFLOW 8.1 model from a single Excel workbook,
+  covering geometry, mesh validation, initial and boundary conditions,
+  multilayer well creation, and simulation execution via the FEFLOW IFM
+  Python API. A key technical contribution is the singleStep() workaround
+  for a verified FEFLOW 8.1 IFM regression that prevents enumeration of
+  multi-snapshot DAC files via getTimeSteps() / loadTimeStep(). The
+  extracted average production temperature is then carried, without
+  re-estimation, into an ORC power-cycle performance estimate and a
+  techno-economic assessment (CAPEX, LCOE, sensitivity analysis). The
+  repository documents every engineering assumption and limitation
+  explicitly and is intended for educational and research use, not as a
+  bankable feasibility study.
 keywords:
   - geothermal energy
   - FEFLOW
@@ -26,4 +33,10 @@ keywords:
   - geothermal doublet
   - Python automation
   - IFM
+  - ORC
+  - techno-economic assessment
+  - LCOE
 license: MIT
+repository-code: "https://github.com/imansgh/feflow-geothermal-automation"
+version: 1.0.0
+date-released: "2026-07-01"
