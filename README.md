@@ -41,13 +41,14 @@ snapshots through a parallel NumPy archive.
 11. [Known Limitation — FEFLOW 8.1 IFM DAC Enumeration](#known-limitation--feflow-81-ifm-dac-enumeration)
 12. [Reproducibility](#reproducibility)
 13. [Example Results](#example-results)
-14. [Testing](#testing)
-15. [Adapting for Groups 1–6](#adapting-for-groups-16)
-16. [Future Work](#future-work)
-17. [Contributing](#contributing)
-18. [Citation](#citation)
-19. [Acknowledgements / Team](#acknowledgements--team)
-20. [License](#license)
+14. [Energy Production & Economic Assessment](#energy-production--economic-assessment)
+15. [Testing](#testing)
+16. [Adapting for Groups 1–6](#adapting-for-groups-16)
+17. [Future Work](#future-work)
+18. [Contributing](#contributing)
+19. [Citation](#citation)
+20. [Acknowledgements / Team](#acknowledgements--team)
+21. [License](#license)
 
 ---
 
@@ -111,6 +112,18 @@ geoth_tutorial_data_Group3.xlsx
               ├──► figures/F6_head_evolution.png
               ├──► figures/F7_timestep_evolution.png
               └──► outputs/thermal_power_table.csv
+              │
+              ▼
+ Stage 12  Extract exact average production temperature (raw NPZ, no chart reading)
+              │
+              ├──► outputs/Average_Production_Temperature.csv
+              └──► outputs/thermal_timeseries.csv
+                        │
+                        ▼
+ economics/  ORC electrical power (ORC_Group3.xlsx)
+              │
+              ▼
+             CAPEX / LCOE / sensitivity (Economic_Assessment_Group3.xlsx)
 ```
 
 ---
@@ -136,7 +149,13 @@ feflow-geothermal-automation/
 │   ├── 08_multilayer_wells.py            # MLW assignment + injection T BC
 │   ├── 09_simulation_settings.py         # FE/BE, dt limits, custom output times
 │   ├── 10_run_model.py                   # singleStep() loop, NPZ writer
-│   └── 11_postprocess.py                 # Figures F1–F7 + CSV table
+│   ├── 11_postprocess.py                 # Figures F1–F7 + CSV table
+│   └── 12_extract_avg_production_temperature.py  # Exact T_prod_avg CSV from raw NPZ
+│
+├── economics/                            # Energy production & economic assessment
+│   ├── README.md                         # Methodology, assumptions, caveats
+│   ├── ORC_Group3.xlsx                   # Electrical power (Lorentz-cycle ORC)
+│   └── Economic_Assessment_Group3.xlsx   # CAPEX / LCOE / sensitivity spider diagram
 │
 ├── tests/
 │   ├── conftest.py
@@ -163,7 +182,9 @@ feflow-geothermal-automation/
 │   ├── Group3.fem                        # FEFLOW model (post-simulation state)
 │   ├── Group3.dac                        # FEFLOW binary results archive
 │   ├── Group3.npz                        # NumPy snapshot archive
-│   └── thermal_power_table.csv
+│   ├── thermal_power_table.csv
+│   ├── Average_Production_Temperature.csv  # Stage 12 output (exact, raw-data)
+│   └── thermal_timeseries.csv              # Stage 12 output (same data, alt name)
 │
 ├── build_group3_model.py                 # Master pipeline script
 ├── requirements.txt
@@ -275,6 +296,10 @@ python build_group3_model.py --skip-run
 # Regenerate figures from an existing NPZ (no licence needed)
 cd scripts && python 11_postprocess.py
 
+# Extract the exact average production temperature CSV (licence needed —
+# well→node mapping requires FEFLOW IFM; everything else is plain NumPy)
+cd scripts && python 12_extract_avg_production_temperature.py
+
 # Run the test suite (no licence needed)
 pytest tests/ -v
 ```
@@ -300,6 +325,7 @@ attempted. Inspect the console output to identify failed stages.
 | 09 | `09_simulation_settings.py` | FE/BE, dt_initial = 1 × 10⁻¹⁰ d, dt_max = 100 d, 20 output times | Yes |
 | 10 | `10_run_model.py` | `singleStep()` loop; write `Group3.npz` and `Group3.dac` | Yes |
 | 11 | `11_postprocess.py` | Figures F1–F7; `thermal_power_table.csv` | **No** |
+| 12 | `12_extract_avg_production_temperature.py` | Exact average production-well temperature time series, read directly from `Group3.npz` node values (no chart reading); `Average_Production_Temperature.csv` / `thermal_timeseries.csv` | **Yes** — well→node mapping requires `doc.getMultiLayerWellTopNode()` |
 
 ---
 
@@ -570,6 +596,30 @@ active FEFLOW 8.1 licence.
 | Wall-clock time | ~6.9 min (FEFLOW 8.1, singleStep mode, modern laptop) |
 | Initial time-step size | 1 × 10⁻¹⁰ d |
 | Time-step at steady-state | ~100 d (dt_max reached within the first ~100 simulated days) |
+
+---
+
+## Energy Production & Economic Assessment
+
+Second and third deliverables of the BIP group assignment — full methodology,
+assumptions, and known caveats documented in
+[`economics/README.md`](economics/README.md).
+
+| File | Result |
+|------|--------|
+| `economics/ORC_Group3.xlsx` | ~4.26 MW net electrical, ~34,094 MWh/yr; monthly refinement using Volterra/Pomarance (near Larderello) climate normals |
+| `economics/Economic_Assessment_Group3.xlsx` | CAPEX ≈ €52.0M; simplified LCOE = **185.3 €/MWh**; 5-parameter sensitivity spider diagram (temperature, reinjection temperature, flow rate, well depth, drilling cost/m) |
+
+Unit costs are derived from Dr. Luca Xodo's lecture (STEAM Srl, zero-emission
+binary example); the LCOE formula and CRF were validated by independently
+reproducing Xodo's own worked example (156.4 €/MWh) before applying it to
+Group 3's plant.
+
+> The `Tsource-in` = 125 °C input to the ORC sheet was read from the F3/F4
+> figures (cross-checked two independent ways, agreement within ~0.5 °C) —
+> it is **not yet** confirmed against the raw NPZ node values. Run Stage 12
+> (`scripts/12_extract_avg_production_temperature.py`, requires FEFLOW 8.1
+> IFM) to get the exact figure and update the workbook if it differs.
 
 ---
 
