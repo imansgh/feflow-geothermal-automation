@@ -10,9 +10,13 @@ style of [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- `figures/F9_spider_diagram.png` — exported from the `Sensitivity` sheet's
-  native chart in `economics/Economic_Assessment_Group3.xlsx`; added a new
-  "Sensitivity Analysis" subsection to `README.md` § Results.
+- `figures/F9_spider_diagram.png` — plotted directly from the `Sensitivity`
+  sheet's data in `economics/Economic_Assessment_Group3.xlsx` (no values
+  recalculated), styled after Dr. Xodo's reference spider diagram (percent
+  variation on the x-axis, endpoint value labels); replaces an earlier,
+  Excel-native chart export in which the coincident "Depth" and "Drilling
+  Cost" lines were indistinguishable (one fully hidden behind the other).
+  Added a new "Sensitivity Analysis" subsection to `README.md` § Results.
 - `assets/workFlow_diagram2.png` — nine-step workflow diagram, replacing the
   plain-text workflow diagram in `README.md` § Overview.
 - `assets/RepositoryStructure.png` — repository architecture diagram, added
