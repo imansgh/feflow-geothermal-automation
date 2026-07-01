@@ -86,6 +86,10 @@ Output files
     figures/F5_head_map.png             hydraulic head, Slice 2, final time
     figures/F6_head_evolution.png       h(t) at representative prod/inj wells
     figures/F7_timestep_evolution.png   adaptive dt vs time (log-y axis)
+    figures/F8_average_production_temperature.png/.pdf
+                                         avg production T vs time (100 yr),
+                                         from outputs/Average_Production_Temperature.csv
+                                         -- links FEFLOW results to ORC inlet T
     outputs/thermal_power_table.csv     P_th at every output snapshot
 
 Tutorial reference: pp. 31–32 (§6)
@@ -1141,6 +1145,72 @@ def plot_timestep_evolution(
 
 
 # ---------------------------------------------------------------------------
+# Figure F8: Average production temperature evolution (FEFLOW -> ORC link)
+# ---------------------------------------------------------------------------
+
+def plot_avg_production_temperature_evolution() -> None:
+    """
+    Figure F8: Average production temperature vs. time over the 100-year run.
+
+    Reads outputs/Average_Production_Temperature.csv (falls back to
+    outputs/thermal_timeseries.csv if the former is absent) -- no IFM/DAC
+    access needed, since Stage 12 already extracted this series. This figure
+    closes the chain between the FEFLOW thermal results and the ORC inlet
+    temperature used downstream in the energy production analysis.
+    """
+    FIGURES_DIR.mkdir(parents=True, exist_ok=True)
+
+    csv_path = OUTPUTS_DIR / "Average_Production_Temperature.csv"
+    if not csv_path.exists():
+        csv_path = OUTPUTS_DIR / "thermal_timeseries.csv"
+    if not csv_path.exists():
+        raise FileNotFoundError(
+            "Neither Average_Production_Temperature.csv nor thermal_timeseries.csv "
+            f"found in {OUTPUTS_DIR}. Run Stage 12 first."
+        )
+
+    df = pd.read_csv(csv_path)
+    time_col = "Time (years)"
+    temp_col = "Average Production Temperature (°C)"
+
+    df = df.sort_values(time_col).reset_index(drop=True)
+    t_final = float(df[time_col].iloc[-1])
+    T_final = float(df[temp_col].iloc[-1])
+
+    fig, ax = plt.subplots(figsize=(10, 5))
+    ax.plot(df[time_col], df[temp_col], "b-", lw=1.5)
+
+    ax.plot([t_final], [T_final], "o", color="firebrick", markersize=6, zorder=5)
+    ax.annotate(
+        f"Final = {T_final:.2f} °C",
+        xy=(t_final, T_final),
+        xytext=(-90, 15),
+        textcoords="offset points",
+        fontsize=9,
+        arrowprops=dict(arrowstyle="->", color="firebrick"),
+    )
+
+    ax.set_xlabel("Simulation Time (years)")
+    ax.set_ylabel("Average Production Temperature (°C)")
+    ax.set_title("Average Production Temperature During the 100-Year Simulation")
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(0, max(df[time_col].max(), t_final))
+
+    fig.tight_layout()
+    png_path = FIGURES_DIR / "F8_average_production_temperature.png"
+    pdf_path = FIGURES_DIR / "F8_average_production_temperature.pdf"
+    fig.savefig(png_path, dpi=300, bbox_inches="tight")
+    fig.savefig(pdf_path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+    log.info("Saved: %s", png_path.name)
+    log.info("Saved: %s", pdf_path.name)
+    log.info(
+        "F8 source CSV: %s | final t=%.4f yr | final T=%.4f degC",
+        csv_path.name, t_final, T_final,
+    )
+
+
+# ---------------------------------------------------------------------------
 # CSV export
 # ---------------------------------------------------------------------------
 
@@ -1233,12 +1303,15 @@ def main() -> None:
     log.info("Generating F7 (timestep evolution):")
     plot_timestep_evolution(cfg)
 
+    log.info("Generating F8 (average production temperature evolution):")
+    plot_avg_production_temperature_evolution()
+
     # --- CSV ---
     export_thermal_power_table(df_power)
 
     log.info(
         "Stage 11 complete — %d figures + 1 CSV saved.",
-        7,
+        8,
     )
     log.info("Figures : %s", FIGURES_DIR)
     log.info("Outputs : %s", OUTPUTS_DIR)
