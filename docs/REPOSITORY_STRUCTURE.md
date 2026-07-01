@@ -65,7 +65,7 @@ feflow-geothermal-automation/
 │   ├── F7_timestep_evolution.png
 │   ├── F8_average_production_temperature.png
 │   ├── F8_average_production_temperature.pdf
-│   └── F9_spider_diagram.png                # Exported from the Sensitivity sheet's native chart
+│   └── F9_spider_diagram.png                # Plotted from the Sensitivity sheet's data
 │
 ├── docs/
 │   ├── VALIDATION.md                         # Independent technical validation summary
