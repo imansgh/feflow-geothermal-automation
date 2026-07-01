@@ -42,7 +42,7 @@ binary example), scaled to Group 3's plant.
 | `Assumptions` | Wellfield data, unit costs, financial parameters (i = 10%, n = 20 yr, CF = 95%). All yellow cells are editable. |
 | `CAPEX_Group3` | Full cost breakdown → **Total CAPEX ≈ €51.9M** (≈ €12,294/kW net). |
 | `LCOE_Group3` | Simplified NREL-style LCOE → **186.5 €/MWh**. Formula validated by reproducing Xodo's own example (156.4 €/MWh) with the same method. |
-| `Sensitivity` | Spider diagram (matches Xodo's chart style) varying `T_source-in`, `T_source-out`, flow rate, well depth, and drilling cost/m by ±10%/±20%. The base-case (0% variation) cell in all five columns now references `LCOE_Group3!$B$12` directly, so all five lines cross at exactly the base LCOE by construction, not merely by coincidence of two parallel calculations. Exported as `../figures/F9_spider_diagram.png` (see [README § Sensitivity Analysis](../README.md#sensitivity-analysis)). |
+| `Sensitivity` | Spider diagram varying `T_source-in`, `T_source-out`, flow rate, well depth, and drilling cost/m by ±10%/±20%. The base-case (0% variation) cell in all five columns now references `LCOE_Group3!$B$12` directly, so all five lines cross at exactly the base LCOE by construction, not merely by coincidence of two parallel calculations. Plotted (in Dr. Xodo's chart style, with endpoint value labels) as `../figures/F9_spider_diagram.png` (see [README § Sensitivity Analysis](../README.md#sensitivity-analysis)). |
 
 **Known assumptions / caveats (verbally addressed in the presentation, not bugs):**
 
