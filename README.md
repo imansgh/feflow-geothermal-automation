@@ -63,33 +63,15 @@ instead of being computed as three disconnected spreadsheets.
 
 ### Workflow
 
-```text
-Reservoir characterization
-        │
-        ▼
-FEFLOW simulation
-        │
-        ▼
-Thermal post-processing
-        │
-        ▼
-Average production temperature extraction
-        │
-        ▼
-ORC performance estimation
-        │
-        ▼
-Annual electricity production
-        │
-        ▼
-Economic assessment
-        │
-        ▼
-LCOE
-        │
-        ▼
-Sensitivity analysis
-```
+<p align="center">
+  <img src="assets/workFlow_diagram2.png" width="520" alt="Nine-step workflow: reservoir characterization, FEFLOW simulation, thermal post-processing, average production temperature extraction, ORC performance estimation, annual electricity production, economic assessment, LCOE, sensitivity analysis">
+</p>
+
+<p align="center">
+  <em>Nine-step workflow linking reservoir characterization through the FEFLOW
+  simulation and thermal post-processing to ORC performance estimation,
+  economic assessment, and sensitivity analysis.</em>
+</p>
 
 The ORC inlet temperature is not assumed or re-estimated independently — it
 is extracted from the FEFLOW post-processing output (see
@@ -142,7 +124,8 @@ feflow-geothermal-automation/
 │
 ├── assets/
 │   ├── RepositoryStructure.png             # Repository architecture diagram (this README)
-│   └── Workflow.png                        # Hero workflow diagram (this README)
+│   ├── Workflow.png                        # Hero workflow diagram (this README)
+│   └── workFlow_diagram2.png               # Nine-step workflow diagram (§ Overview, this README)
 │
 ├── data/
 │   └── geoth_tutorial_data_Group3.xlsx      # Source workbook (well data, slice T)
